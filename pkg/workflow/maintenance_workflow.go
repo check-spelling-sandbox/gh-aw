@@ -135,6 +135,18 @@ on:
   schedule:
     - cron: "` + cronSchedule + `"  # ` + scheduleDesc + ` (based on minimum expires: ` + strconv.Itoa(minExpiresDays) + ` days)
   workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Optional maintenance operation to run'
+        required: false
+        type: choice
+        default: ''
+        options:
+          - ''
+          - 'disable'
+          - 'enable'
+          - 'update'
+          - 'upgrade'
 
 permissions: {}
 
@@ -211,6 +223,88 @@ jobs:
             const { main } = require('/opt/gh-aw/actions/close_expired_pull_requests.cjs');
             await main();
 `)
+
+	// Add unified run_operation job for all dispatch operations
+	yaml.WriteString(`
+  run_operation:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.operation != '' && !github.event.repository.fork }}
+    runs-on: ubuntu-slim
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: ` + GetActionPin("actions/checkout") + `
+        with:
+          persist-credentials: false
+
+      - name: Setup Scripts
+        uses: ` + setupActionRef + `
+        with:
+          destination: /opt/gh-aw/actions
+
+      - name: Check admin/maintainer permissions
+        uses: ` + GetActionPin("actions/github-script") + `
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/check_team_member.cjs');
+            await main();
+
+`)
+
+	if actionMode == ActionModeDev {
+		yaml.WriteString(`      - name: Setup Go
+        uses: ` + GetActionPin("actions/setup-go") + `
+        with:
+          go-version-file: go.mod
+          cache: true
+
+      - name: Build gh-aw
+        run: make build
+
+      - name: Run operation
+        uses: ` + GetActionPin("actions/github-script") + `
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_AW_OPERATION: ${{ github.event.inputs.operation }}
+          GH_AW_CMD_PREFIX: ./gh-aw
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/run_operation_update_upgrade.cjs');
+            await main();
+`)
+	} else {
+		extensionRef := version
+		if actionTag != "" {
+			extensionRef = actionTag
+		}
+		yaml.WriteString(`      - name: Install gh-aw extension
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh extension install github/gh-aw@` + extensionRef + `
+
+      - name: Run operation
+        uses: ` + GetActionPin("actions/github-script") + `
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_AW_OPERATION: ${{ github.event.inputs.operation }}
+          GH_AW_CMD_PREFIX: gh aw
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const { setupGlobals } = require('/opt/gh-aw/actions/setup_globals.cjs');
+            setupGlobals(core, github, context, exec, io);
+            const { main } = require('/opt/gh-aw/actions/run_operation_update_upgrade.cjs');
+            await main();
+`)
+	}
 
 	// Add compile-workflows and zizmor-scan jobs only in dev mode
 	// These jobs are specific to the gh-aw repository and require go.mod, make build, etc.

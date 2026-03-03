@@ -87,6 +87,10 @@ The maintenance workflow searches for items with this expiration format (checked
 
 See [Safe Outputs Reference](/gh-aw/reference/safe-outputs/) for complete documentation.
 
+### Manual Maintenance Operations
+
+The generated `agentics-maintenance.yml` workflow also supports manual bulk operations via `workflow_dispatch`. Admin or maintainer users can trigger it from the GitHub Actions UI or the CLI to disable or enable all agentic workflows in the repository at once. The operation is restricted to admin and maintainer roles and is not available on forks.
+
 ### Close Older Issues
 
 Automatically close older issues with the same workflow-id marker when creating new ones. This keeps your issues focused on the latest information.
