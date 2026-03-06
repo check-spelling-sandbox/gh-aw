@@ -73,7 +73,7 @@ jobs:
 
   # 3) contents:write — should succeed (has push-equivalent)
   write_contents:
-    name: With contents: write (should succeed)
+    name: "With contents: write (should succeed)"
     runs-on: ubuntu-latest
     permissions:
       contents: write
