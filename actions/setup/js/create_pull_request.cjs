@@ -23,6 +23,8 @@ const { createCheckoutManager } = require("./dynamic_checkout.cjs");
 const { getBaseBranch } = require("./get_base_branch.cjs");
 const { createAuthenticatedGitHubClient } = require("./handler_auth.cjs");
 const { buildWorkflowRunUrl } = require("./workflow_metadata_helpers.cjs");
+const { checkForManifestFiles, checkForProtectedPaths } = require("./manifest_file_helpers.cjs");
+const { renderTemplate } = require("./messages_core.cjs");
 
 /**
  * @typedef {import('./types/handler-factory').HandlerFactoryFunction} HandlerFactoryFunction
@@ -415,6 +417,38 @@ async function main(config = {}) {
       }
 
       core.info("Patch size validation passed");
+    }
+
+    // Check for protected file modifications (e.g., package.json, go.mod, .github/ files, AGENTS.md, CLAUDE.md)
+    // By default, protected file modifications are refused to prevent supply chain attacks.
+    // Set protected-files: fallback-to-issue to push the branch but create a review issue
+    // instead of a pull request, so a human can carefully review the changes first.
+    // Set protected-files: allowed only when the workflow is explicitly designed to manage these files.
+    /** @type {{ manifestFilesFound: string[], protectedPathsFound: string[] } | null} */
+    let manifestProtectionFallback = null;
+    if (!isEmpty) {
+      const manifestFiles = Array.isArray(config.protected_files) ? config.protected_files : [];
+      const protectedPathPrefixes = Array.isArray(config.protected_path_prefixes) ? config.protected_path_prefixes : [];
+      // protected_files_policy is a string enum: "allowed" = allow, "fallback-to-issue" = fallback, "blocked" (default) = deny.
+      const policy = config.protected_files_policy;
+      const isAllowed = policy === "allowed";
+      const isFallback = policy === "fallback-to-issue";
+      if (!isAllowed) {
+        const { hasManifestFiles, manifestFilesFound } = checkForManifestFiles(patchContent, manifestFiles);
+        const { hasProtectedPaths, protectedPathsFound } = checkForProtectedPaths(patchContent, protectedPathPrefixes);
+        const allFound = [...manifestFilesFound, ...protectedPathsFound];
+        if (allFound.length > 0) {
+          if (isFallback) {
+            // Record for fallback-to-issue handling below; let patch application proceed
+            manifestProtectionFallback = { manifestFilesFound, protectedPathsFound };
+            core.warning(`Protected file protection triggered (fallback-to-issue): ${allFound.join(", ")}. Will create review issue instead of pull request.`);
+          } else {
+            const message = `Cannot create pull request: patch modifies protected files (${allFound.join(", ")}). Set protected-files: fallback-to-issue to create a review issue instead.`;
+            core.error(message);
+            return { success: false, error: message };
+          }
+        }
+      }
     }
 
     if (isEmpty && !isStaged && !allowEmpty) {
@@ -888,6 +922,54 @@ ${patchPreview}`;
             core.warning(message);
             return { success: false, error: message, skipped: true };
         }
+      }
+    }
+
+    // Protected file protection – fallback-to-issue path:
+    // The patch has already been applied and pushed to the branch.  Instead of
+    // creating a pull request, we create a review issue that explains why the PR
+    // was not created and provides a PR intent URL so the reviewer can create it
+    // after manually inspecting the protected file changes.
+    if (manifestProtectionFallback) {
+      const allFound = [...manifestProtectionFallback.manifestFilesFound, ...manifestProtectionFallback.protectedPathsFound];
+      const githubServer = process.env.GITHUB_SERVER_URL || "https://github.com";
+      const encodedBase = baseBranch.split("/").map(encodeURIComponent).join("/");
+      const encodedHead = branchName.split("/").map(encodeURIComponent).join("/");
+      const createPrUrl = `${githubServer}/${repoParts.owner}/${repoParts.repo}/compare/${encodedBase}...${encodedHead}?expand=1&title=${encodeURIComponent(title)}`;
+
+      const templatePath = "/opt/gh-aw/prompts/manifest_protection_create_pr_fallback.md";
+      const template = fs.readFileSync(templatePath, "utf8");
+      const fallbackBody = renderTemplate(template, {
+        body,
+        files: allFound.map(f => `\`${f}\``).join(", "),
+        create_pr_url: createPrUrl,
+      });
+
+      try {
+        const { data: issue } = await githubClient.rest.issues.create({
+          owner: repoParts.owner,
+          repo: repoParts.repo,
+          title: title,
+          body: fallbackBody,
+          labels: mergeFallbackIssueLabels(labels),
+        });
+
+        core.info(`Created protected-file-protection review issue #${issue.number}: ${issue.html_url}`);
+
+        await updateActivationComment(github, context, core, issue.html_url, issue.number, "issue");
+
+        return {
+          success: true,
+          fallback_used: true,
+          issue_number: issue.number,
+          issue_url: issue.html_url,
+          branch_name: branchName,
+          repo: itemRepo,
+        };
+      } catch (issueError) {
+        const error = `Protected file protection: failed to create review issue. Error: ${issueError instanceof Error ? issueError.message : String(issueError)}`;
+        core.error(error);
+        return { success: false, error };
       }
     }
 
