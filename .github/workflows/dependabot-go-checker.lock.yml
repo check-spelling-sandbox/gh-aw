@@ -166,6 +166,7 @@ jobs:
           </github-context>
           
           GH_AW_PROMPT_EOF
+          cat "/opt/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
           cat << 'GH_AW_PROMPT_EOF'
           </system>
           GH_AW_PROMPT_EOF
