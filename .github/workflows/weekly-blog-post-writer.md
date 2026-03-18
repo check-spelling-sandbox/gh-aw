@@ -18,7 +18,10 @@ tools:
   edit:
   bash: ["*"]
   github:
-    lockdown: true
+    lockdown: false
+    repos:
+      - github/gh-aw
+    min-integrity: approved
     toolsets:
       - repos
       - pull_requests
