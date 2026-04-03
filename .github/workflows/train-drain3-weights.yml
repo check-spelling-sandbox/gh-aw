@@ -2,7 +2,7 @@ name: Train Log Pattern Weights
 
 on:
   schedule:
-    - cron: "0 4 * * *"  # Daily at 04:00 UTC
+    - cron: "17 4 * * *"  # Daily at 04:00 UTC
   workflow_dispatch:
 
 permissions: {}
@@ -33,7 +33,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           mkdir -p /tmp/drain3-logs
-          ./gh-aw logs --train --output /tmp/drain3-logs --count 50
+          ./gh-aw logs --train --output /tmp/drain3-logs --count 1000
 
       - name: Copy trained weights to source tree
         run: |
