@@ -21,9 +21,11 @@ type VSCodeMCPServer struct {
 	CWD     string   `json:"cwd,omitempty"`
 }
 
-// MCPConfig represents the structure of mcp.json
+// MCPConfig represents the structure of .mcp.json for Claude Code.
 type MCPConfig struct {
-	Servers map[string]VSCodeMCPServer `json:"servers"`
+	MCPServers map[string]VSCodeMCPServer `json:"mcpServers,omitempty"`
+	// Servers is a legacy key kept for backward-compatible reads of existing .mcp.json files.
+	Servers map[string]VSCodeMCPServer `json:"servers,omitempty"`
 }
 
 // ensureMCPConfig creates .mcp.json with gh-aw MCP server configuration
@@ -51,7 +53,7 @@ func ensureMCPConfig(verbose bool) error {
 		}
 
 		// Check if the server is already configured correctly
-		if existingConfig, exists := config.Servers[ghAwServerName]; exists {
+		if existingConfig, exists := config.MCPServers[ghAwServerName]; exists {
 			existingJSON, _ := json.Marshal(existingConfig)
 			newJSON, _ := json.Marshal(ghAwConfig)
 			if string(existingJSON) == string(newJSON) {
@@ -72,9 +74,9 @@ func ensureMCPConfig(verbose bool) error {
 	// File doesn't exist - create it
 	mcpConfigLog.Print("No existing config found, creating new one")
 	config := MCPConfig{
-		Servers: make(map[string]VSCodeMCPServer),
+		MCPServers: make(map[string]VSCodeMCPServer),
 	}
-	config.Servers[ghAwServerName] = ghAwConfig
+	config.MCPServers[ghAwServerName] = ghAwConfig
 
 	// Write config file with proper indentation
 	data, err := json.MarshalIndent(config, "", "  ")
@@ -98,7 +100,7 @@ func renderMCPConfigUpdateInstructions(filePath, serverName string, serverConfig
 		"Existing file detected: "+filePath)
 	fmt.Fprintln(os.Stderr)
 	fmt.Fprintln(os.Stderr, "To enable GitHub Copilot Agent MCP server integration, please add the following")
-	fmt.Fprintln(os.Stderr, "to the \"servers\" section of your .mcp.json file:")
+	fmt.Fprintln(os.Stderr, "to the \"mcpServers\" section of your .mcp.json file:")
 	fmt.Fprintln(os.Stderr)
 
 	// Generate the JSON to add
