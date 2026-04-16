@@ -412,6 +412,13 @@ touch %s
 		copilotExecLog.Printf("Added %d custom env vars from agent config", len(agentConfig.Env))
 	}
 
+	// Inject the dummy COPILOT_API_KEY AFTER all env merges so that legacy/manual
+	// wiring in engine.env or agent.env cannot accidentally overwrite the sentinel
+	// value that triggers AWF's runtime BYOK detection path.
+	if isFeatureEnabled(constants.ByokCopilotFeatureFlag, workflowData) {
+		env["COPILOT_API_KEY"] = constants.CopilotBYOKDummyAPIKey
+	}
+
 	// Add HTTP MCP header secrets to env for passthrough
 	headerSecrets := collectHTTPMCPHeaderSecrets(workflowData.Tools)
 	for varName, secretExpr := range headerSecrets {
