@@ -116,7 +116,7 @@ describe("create_discussion fallback with close_older_discussions", () => {
     vi.clearAllMocks();
   });
 
-  it("should close older issues when close_older_discussions is enabled and fallback to issue occurs", async () => {
+  it("should close older issues when close_older_discussions is enabled and fall back to issue occurs", async () => {
     // Create handler with close_older_discussions enabled
     const handler = await createDiscussionMain({
       max: 5,
@@ -133,7 +133,7 @@ describe("create_discussion fallback with close_older_discussions", () => {
       {}
     );
 
-    // Verify fallback to issue occurred
+    // Verify falling back to issue occurred
     expect(result.success).toBe(true);
     expect(result.fallback).toBe("issue");
     expect(result.number).toBe(456);
@@ -197,7 +197,7 @@ describe("create_discussion fallback with close_older_discussions", () => {
       {}
     );
 
-    // Verify fallback to issue occurred
+    // Verify falling back to issue occurred
     expect(result.success).toBe(true);
     expect(result.fallback).toBe("issue");
     expect(result.number).toBe(456);
@@ -233,7 +233,7 @@ describe("create_discussion fallback with close_older_discussions", () => {
       {}
     );
 
-    // Verify fallback to issue occurred with permissions error
+    // Verify falling back to issue occurred with permissions error
     expect(result.success).toBe(true);
     expect(result.fallback).toBe("issue");
     expect(mockCore.warning).toHaveBeenCalledWith(expect.stringContaining("permissions"));

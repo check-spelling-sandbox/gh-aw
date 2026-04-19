@@ -127,7 +127,7 @@ func TestCheckActionSHAUpdates(t *testing.T) {
 		},
 	}
 
-	// Pre-populate the cache with known values
+	// Prepopulate the cache with known values
 	// For actions/checkout@v5, use the same SHA (up to date)
 	cache.Set("actions/checkout", "v5", "93cb6efe18208431cddfb8368fd83d5badbf9bfd")
 	// For actions/setup-node@v6, use a different SHA (needs update)
@@ -188,10 +188,10 @@ jobs:
 }
 
 func TestExtractActionsFromLockFileInvalidFile(t *testing.T) {
-	// Try to extract from non-existent file
+	// Try to extract from nonexistent file
 	_, err := ExtractActionsFromLockFile("/nonexistent/file.yml")
 	if err == nil {
-		t.Error("Expected error when reading non-existent file, got nil")
+		t.Error("Expected error when reading nonexistent file, got nil")
 	}
 }
 

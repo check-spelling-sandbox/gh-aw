@@ -672,7 +672,7 @@ func writeStepsSection(yaml *strings.Builder, stepsYAML string) {
 }
 
 func (c *Compiler) generateCreateAwInfo(yaml *strings.Builder, data *WorkflowData, engine CodingAgentEngine) {
-	// Engine ID (prefer EngineConfig.ID, fallback to AI field for backwards compatibility)
+	// Engine ID (prefer EngineConfig.ID, fall back to AI field for backwards compatibility)
 	engineID := engine.GetID()
 	if data.EngineConfig != nil && data.EngineConfig.ID != "" {
 		engineID = data.EngineConfig.ID
@@ -840,7 +840,7 @@ func (c *Compiler) generateOutputCollectionStep(yaml *strings.Builder, data *Wor
 	// Config is written to file, not passed as env var
 
 	// Add allowed domains configuration for sanitization
-	// Use manually configured domains if available, otherwise compute from network configuration
+	// Use manually configured domains if available; otherwise, compute from network configuration
 	var domainsStr string
 	if data.SafeOutputs != nil && len(data.SafeOutputs.AllowedDomains) > 0 {
 		// allowed-domains: additional domains unioned with engine/network base set; supports ecosystem identifiers

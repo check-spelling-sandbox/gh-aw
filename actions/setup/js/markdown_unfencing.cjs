@@ -12,12 +12,12 @@
  * Unfence markdown content by removing outer code fence if present.
  *
  * The function detects:
- * - Content starting with ```markdown, ```md, ~~~markdown, or ~~~md (case insensitive)
+ * - Content starting with ```markdown, ```md, ~~~markdown, or ~~~md (case-insensitive)
  * - Content ending with ``` or ~~~
  * - The closing fence must match the opening fence type (backticks or tildes)
  *
  * @param {string} content - The markdown content to unfence
- * @returns {string} The unfenced content if a wrapping fence is detected, otherwise original content
+ * @returns {string} The unfenced content if a wrapping fence is detected; otherwise, original content
  */
 function unfenceMarkdown(content) {
   if (!content || typeof content !== "string") {

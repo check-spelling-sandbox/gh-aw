@@ -73,7 +73,7 @@ async function fetchRepoDiscussionInfo(githubClient, owner, repo) {
  * @returns {{id: string, matchType: string, name: string, requestedCategory?: string}|undefined} Resolved category info
  */
 function resolveCategoryId(categoryConfig, itemCategory, categories) {
-  // Use item category if provided, otherwise use config
+  // Use item category if provided; otherwise, use config
   const categoryToMatch = itemCategory || categoryConfig;
 
   if (categoryToMatch) {
@@ -98,7 +98,7 @@ function resolveCategoryId(categoryConfig, itemCategory, categories) {
     }
   }
 
-  // Fall back to "Announcements" category if available, otherwise first category
+  // Fall back to "Announcements" category if available; otherwise, first category
   if (categories.length > 0) {
     // Try to find an "Announcements" category (case-insensitive)
     const announcementCategory = categories.find(cat => cat.name.toLowerCase() === "announcements" || cat.slug.toLowerCase() === "announcements");
@@ -233,7 +233,7 @@ function isPermissionsError(errorMessage) {
 }
 
 /**
- * Handles fallback to create-issue when discussion creation fails
+ * Handles falling back to create-issue when discussion creation fails
  * @param {Function} createIssueHandler - The create_issue handler function
  * @param {Object} item - The original discussion message item
  * @param {string} qualifiedItemRepo - The qualified repository name (owner/repo)
@@ -267,7 +267,7 @@ async function handleFallbackToIssue(createIssueHandler, item, qualifiedItemRepo
       core.error(`Fallback to create-issue also failed: ${issueResult.error}`);
       return {
         success: false,
-        error: `${contextMessage} and fallback to issue also failed: ${issueResult.error}`,
+        error: `${contextMessage} and falling back to issue also failed: ${issueResult.error}`,
       };
     }
   } catch (fallbackError) {
@@ -275,7 +275,7 @@ async function handleFallbackToIssue(createIssueHandler, item, qualifiedItemRepo
     core.error(`Fallback to create-issue failed: ${fallbackErrorMessage}`);
     return {
       success: false,
-      error: `${contextMessage} and fallback to issue threw an error: ${fallbackErrorMessage}`,
+      error: `${contextMessage} and falling back to issue threw an error: ${fallbackErrorMessage}`,
     };
   }
 }
@@ -302,7 +302,7 @@ async function main(config = {}) {
   const includeFooter = parseBoolTemplatable(config.footer, true);
 
   // Create an authenticated GitHub client. Uses config["github-token"] when set
-  // (for cross-repository operations), otherwise falls back to the step-level github.
+  // (for cross-repository operations); otherwise, falls back to the step-level github.
   const githubClient = await createAuthenticatedGitHubClient(config);
 
   // Check if we're in staged mode

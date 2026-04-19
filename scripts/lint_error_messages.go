@@ -29,7 +29,7 @@ type FileStats struct {
 
 var (
 	// Patterns to detect good error messages.
-	hasExample  = regexp.MustCompile(`(?i)\bexample:\s`)
+	hasExample  = regexp.MustCompile(`(?i)\bexamples?:\s`)
 	hasExpected = regexp.MustCompile(`(?i)\b(expected|valid|must be|should be)\b`)
 
 	// Patterns for error types that MUST have examples.
@@ -259,7 +259,7 @@ func checkErrorQuality(message string, line int) *QualityIssue {
 	}
 
 	// If it has an example, check if it also explains what's expected
-	if !hasExp && !hasExample.MatchString(message) {
+	if !hasExp {
 		return &QualityIssue{
 			Issue:      "Missing expected format/values explanation",
 			Suggestion: "Add 'Expected:' or 'Valid values:' before the example",

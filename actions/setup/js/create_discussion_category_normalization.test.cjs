@@ -254,7 +254,7 @@ describe("create_discussion category normalization", () => {
     expect(createMutationCall[1].categoryId).toBe("DIC_kwDOGFsHUM4BsUn2"); // Audits category
   });
 
-  it("should fallback to first category when no match found", async () => {
+  it("should fall back to first category when no match found", async () => {
     const handler = await createDiscussionMain({
       max: 5,
       category: "NonExistentCategory",
@@ -271,7 +271,7 @@ describe("create_discussion category normalization", () => {
     expect(result.success).toBe(true);
     expect(result.number).toBe(42);
 
-    // Verify fallback to first category (General)
+    // Verify falling back to first category (General)
     const createMutationCall = mockGithub.graphql.mock.calls.find(call => call[0].includes("createDiscussion"));
     expect(createMutationCall).toBeDefined();
     expect(createMutationCall[1].categoryId).toBe("DIC_kwDOGFsHUM4BsUn1"); // General (first)
@@ -346,7 +346,7 @@ describe("create_discussion category normalization", () => {
     expect(createMutationCall[1].categoryId).toBe("DIC_kwDOGFsHUM4BsUn4"); // Announcements
   });
 
-  it("should prefer Announcements category when non-existent category specified", async () => {
+  it("should prefer Announcements category when nonexistent category specified", async () => {
     // Mock categories with Announcements available
     mockGithub.graphql = vi.fn().mockImplementation((query, variables) => {
       if (query.includes("discussionCategories")) {

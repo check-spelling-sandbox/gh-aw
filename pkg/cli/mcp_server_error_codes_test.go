@@ -45,7 +45,7 @@ func TestMCPServer_ErrorCodes_InvalidParams(t *testing.T) {
 	}
 	defer session.Close()
 
-	// Test 1: add tool with missing workflows parameter
+	// Test 1: add tool without workflows parameter
 	t.Run("add_missing_workflows", func(t *testing.T) {
 		params := &mcp.CallToolParams{
 			Name:      "add",
@@ -156,7 +156,7 @@ func TestMCPServer_ErrorCodes_InternalError(t *testing.T) {
 		params := &mcp.CallToolParams{
 			Name: "audit",
 			Arguments: map[string]any{
-				"run_id_or_url": "1", // Invalid / non-existent run ID
+				"run_id_or_url": "1", // Invalid / nonexistent run ID
 			},
 		}
 

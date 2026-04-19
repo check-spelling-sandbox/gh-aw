@@ -85,7 +85,7 @@ func (c *Compiler) extractRepoMemoryConfig(toolsConfig *ToolsConfig, workflowID 
 	}
 	repoMemoryValue := toolsConfig.RepoMemory.Raw
 
-	// defaultMemoryBranchID returns workflowID when set, otherwise "default".
+	// defaultMemoryBranchID returns workflowID when set; otherwise, "default".
 	// This qualifies the default branch name by workflow, e.g. "memory/repo-assist".
 	defaultMemoryBranchID := func() string {
 		if workflowID != "" {
@@ -685,7 +685,7 @@ func (c *Compiler) buildPushRepoMemoryJob(data *WorkflowData, threatDetectionEna
 		fmt.Fprintf(&step, "          MEMORY_ID: %s\n", memory.ID)
 		fmt.Fprintf(&step, "          TARGET_REPO: %s\n", targetRepo)
 		fmt.Fprintf(&step, "          BRANCH_NAME: %s\n", memory.BranchName)
-		// For wiki mode, pre-populate the allowed-repos list with the wiki repo so the push
+		// For wiki mode, prepopulate the allowed-repos list with the wiki repo so the push
 		// script accepts it (defaultRepo is always the plain github.repository, not .wiki)
 		if memory.Wiki {
 			fmt.Fprintf(&step, "          REPO_MEMORY_ALLOWED_REPOS: %s\n", targetRepo)
